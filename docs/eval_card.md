@@ -41,4 +41,23 @@ Card này đi kèm mỗi báo cáo và được dùng lại ở Day 10.
   - Chạy hoàn toàn trên `MockLLM`, chưa đo trên LLM thật hay lưu lượng người dùng thật.
   - Tập `v1` chỉ có 14 item nên khoảng tin cậy bootstrap rộng, chỉ phát hiện được hồi quy lớn.
   - Judge được kiểm định bằng dữ liệu replay công khai (`judge_tone_public.csv`, `judge_helpful_public.csv`), chưa có tập held-out nhãn người mới.
-- **Khi nào tăng eval-set version:** Khi bổ sung item mới (ví dụ adversarial pack hoặc item sinh từ trace sự cố thực tế) thì tăng `eval_set_version` (`v1 -> v2`), chạy lại baseline trên cùng eval set mới và chỉ áp dụng ratchet trong phạm vi cùng version.
+- **Khi nào tăng eval-set version:** Khi bổ sung item mới (ví dụ adversarial pack hoặc item sinh từ trace sự cố thực tế) thì tăng `eval_set_version` (`v1 -> v2`), chạy lại baseline trên cùng eval set mới và chỉ siết chặt dần (ratchet) trên cùng version.
+
+---
+
+## Phần bổ sung v2 (Advanced / Expert — M5–M7)
+
+- **Run ID / eval set SHA (`v2`):** `E-swarm-20261117-2c35` · eval set `v2` (`sha 2c35117463a5`) · 28 item × 5 seed (= 140 trial: 14 item v1 + 14 item `adversarial_v2.json`) · nhãn `src/data/eval/labels_v2.json` · `metric_spec_version: "2.0"`.
+- **Chọn ngưỡng từ chạy A/A (`--aa 66,77,88,99,110`):**
+  - Trên `MockLLM`, A/A giữa 2 bộ seed `[11, 22, 33, 44, 55]` và `[66, 77, 88, 99, 110]` cho `Δ = +0.0000` ở mọi metric (`pass_rate = 0.9786`, `pass_hat_5 = 0.8929`).
+  - Với LLM thật có tính ngẫu nhiên, dải nhiễu A/A sẽ `> 0`; ngưỡng sàn bắt buộc phải đặt **ngoài dải nhiễu A/A** để tránh chặn nhầm PR trung thực. Trên tập v2, sàn `pass_hat_5 >= 0.80` (blocking) nằm dưới mức baseline `0.8929` nhưng cao hơn hẳn biến thể chập chờn `flaky_regression` (`0.5714`).
+- **Slice & metric nào bắt lỗi nào:**
+  - `slice:money_movement/pass_rate` (`min: 0.90`, `no_significant_drop: true`, `blocking: true`): bắt `slice_regression` (`0.85 < 0.90`) dù `pass_rate` toàn cục vẫn đạt `0.9357 >= 0.85`.
+  - `slice:adversarial/pass_rate` (`min: 0.90`, `no_significant_drop: true`, `blocking: true`) & `slice:denial/pass_rate` (`min: 0.90`, `no_significant_drop: true`, `blocking: true`): bảo vệ nhóm đối kháng (bao gồm `FM-09 cross_principal`) và nhóm từ chối.
+  - `pass_hat_5` (`min: 0.80`, `blocking: true`): bắt lỗi chập chờn 1/5 seed (`flaky_regression`: `pass_hat_5 = 0.5714`) mà trung bình `pass_rate` (`0.9143`) không bắt được ổn định.
+  - `reply_amount_matches_ledger` (`min: 0.95`, `no_significant_drop: true`, `blocking: true`): bắt lỗi `FM-08 misreport` (reply nói sai số tiền so với ledger).
+- **Scorecard & Anti-gaming (`M7`):**
+  - `lab9.mutation`: `3/3` regression bị chặn (`seeded_regression`, `slice_regression`, `flaky_regression`), `0` báo nhầm (`fixed`, `honest_refactor` đều merge).
+  - `lab9.traps`: `4/4` trap bị `integrity_check` / ratchet chặn với `exit 1` (`evaluator_errors_as_nan`, `dropped_failing_rows`, `cherry_picked_seeds`, `loosened_spec`), cùng các trap ẩn như dòng trùng lặp, `evaluator_failures` trên run xanh, và sửa nhãn slice.
+- **Giới hạn cỡ mẫu:** Một bug chỉ xuất hiện ở `1/3` seed (`rare`) **không** thể phát hiện ổn định với `5` seed hiện tại; không tự ý hạ ngưỡng chỉ để ép gate bắt lỗi hiếm đó mà cần tăng số seed hoặc bổ sung test chuyên biệt khi lên phiên bản mới.
+
