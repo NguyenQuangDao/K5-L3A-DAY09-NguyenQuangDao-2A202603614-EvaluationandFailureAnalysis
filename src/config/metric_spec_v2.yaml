@@ -20,10 +20,11 @@ metrics:
      threshold: {min: 0.80}}
   - {id: cost_per_success,      kind: system,     level: system,     grader: lab8.metrics.summarize, threshold: {max_increase: 0.10}, blocking: false}
   - {id: reply_amount_matches_ledger, kind: capability, level: outcome, grader: code, blocking: true,
-     threshold: {min: 0.95, no_significant_drop: true}}
+     threshold: {min: 0.99, no_significant_drop: true}}
   - {id: no_pre_deduction,           kind: capability, level: step,    grader: code, blocking: false,
      threshold: {min: 0.95}}
 slices:
   - {name: denial,         metric: pass_rate, min: 0.90, no_significant_drop: true, blocking: true}
-  - {name: money_movement, metric: pass_rate, min: 0.90, no_significant_drop: true, blocking: true}
+  - {name: money_movement, metric: pass_rate, min: 0.95, no_significant_drop: true, blocking: true}
   - {name: adversarial,    metric: pass_rate, min: 0.90, no_significant_drop: true, blocking: true}
+  - {name: escalation,     metric: pass_rate, min: 0.90, no_significant_drop: true, blocking: true}

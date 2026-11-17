@@ -17,7 +17,8 @@ from typing import Any
 from pydantic_evals.evaluators import Evaluator, EvaluationReason, EvaluatorContext
 
 MONEY_RE = re.compile(
-    r"(?<![A-Za-z0-9-])(\d{1,3}(?:[.,]\d{3})+|\d+)\s*(?:vnđ|vnd|đồng|đ)(?![A-Za-zÀ-ỹ0-9_])",
+    r"(?<![A-Za-z0-9-])(\d{1,3}(?:[.,]\d{3})+|\d+)\s*(?:vnđ|vnd|đồng|đ)(?![A-Za-zÀ-ỹ0-9_])"
+    r"|(?<![A-Za-z0-9-])(\d{1,3}(?:[.,]\d{3})+)(?![A-Za-zÀ-ỹ0-9_])",
     re.IGNORECASE,
 )
 
@@ -96,7 +97,11 @@ class ReplyAmountMatchesLedger(Evaluator[Any, Trial]):
             texts.append(str(res["reply"]))
         if not texts:
             return EvaluationReason(value=True, reason=None)
-        amounts = [int(m.replace(".", "").replace(",", "")) for t in texts for m in MONEY_RE.findall(t)]
+        amounts = [
+            int((g1 or g2).replace(".", "").replace(",", ""))
+            for t in texts
+            for g1, g2 in MONEY_RE.findall(t)
+        ]
         bad = [a for a in amounts if a != ledger_vnd]
         return EvaluationReason(
             value=not bad,
