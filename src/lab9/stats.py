@@ -71,6 +71,7 @@ def paired_bootstrap(a: Sequence[float], b: Sequence[float], *, n_resamples: int
         raise ValueError("a and b must have the same length")
     if not a:
         raise ValueError("a and b must be non-empty")
+    import inspect
     import numpy as np
     from scipy.stats import bootstrap
 
@@ -79,6 +80,7 @@ def paired_bootstrap(a: Sequence[float], b: Sequence[float], *, n_resamples: int
     if np.array_equal(arr_a, arr_b):
         return (0.0, 0.0, 0.0)
     diff = float(np.mean(arr_a) - np.mean(arr_b))
+    rng_kw = "rng" if "rng" in inspect.signature(bootstrap).parameters else "random_state"
     res = bootstrap(
         (arr_a, arr_b),
         lambda x, y: np.mean(x) - np.mean(y),
@@ -86,7 +88,7 @@ def paired_bootstrap(a: Sequence[float], b: Sequence[float], *, n_resamples: int
         n_resamples=n_resamples,
         method="percentile",
         confidence_level=confidence,
-        rng=np.random.default_rng(rng),
+        **{rng_kw: np.random.default_rng(rng)},
     )
     return (diff, float(res.confidence_interval.low), float(res.confidence_interval.high))
 
