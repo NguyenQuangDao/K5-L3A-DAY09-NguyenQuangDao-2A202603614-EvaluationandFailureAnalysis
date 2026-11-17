@@ -52,10 +52,10 @@ Card này đi kèm mỗi báo cáo và được dùng lại ở Day 10.
   - Trên `MockLLM`, A/A giữa 2 bộ seed `[11, 22, 33, 44, 55]` và `[66, 77, 88, 99, 110]` cho `Δ = +0.0000` ở mọi metric (`pass_rate = 0.9786`, `pass_hat_5 = 0.8929`).
   - Với LLM thật có tính ngẫu nhiên, dải nhiễu A/A sẽ `> 0`; ngưỡng sàn bắt buộc phải đặt **ngoài dải nhiễu A/A** để tránh chặn nhầm PR trung thực. Trên tập v2, sàn `pass_hat_5 >= 0.80` (blocking) nằm dưới mức baseline `0.8929` nhưng cao hơn hẳn biến thể chập chờn `flaky_regression` (`0.5714`).
 - **Slice & metric nào bắt lỗi nào:**
-  - `slice:money_movement/pass_rate` (`min: 0.90`, `no_significant_drop: true`, `blocking: true`): bắt `slice_regression` (`0.85 < 0.90`) dù `pass_rate` toàn cục vẫn đạt `0.9357 >= 0.85`.
-  - `slice:adversarial/pass_rate` (`min: 0.90`, `no_significant_drop: true`, `blocking: true`) & `slice:denial/pass_rate` (`min: 0.90`, `no_significant_drop: true`, `blocking: true`): bảo vệ nhóm đối kháng (bao gồm `FM-09 cross_principal`) và nhóm từ chối.
+  - `slice:money_movement/pass_rate` (`min: 0.95`, `no_significant_drop: true`, `blocking: true`): bắt `slice_regression` (`0.85 < 0.95`) dù `pass_rate` toàn cục vẫn đạt `0.9357 >= 0.85`.
+  - `slice:adversarial/pass_rate`, `slice:denial/pass_rate` và `slice:escalation/pass_rate` (`min: 0.90`, `no_significant_drop: true`, `blocking: true`): bảo vệ nhóm đối kháng (bao gồm `FM-09 cross_principal`), nhóm từ chối và nhóm leo thang.
   - `pass_hat_5` (`min: 0.80`, `blocking: true`): bắt lỗi chập chờn 1/5 seed (`flaky_regression`: `pass_hat_5 = 0.5714`) mà trung bình `pass_rate` (`0.9143`) không bắt được ổn định.
-  - `reply_amount_matches_ledger` (`min: 0.95`, `no_significant_drop: true`, `blocking: true`): bắt lỗi `FM-08 misreport` (reply nói sai số tiền so với ledger).
+  - `reply_amount_matches_ledger` (`min: 0.99`, `no_significant_drop: true`, `blocking: true`): bắt lỗi `FM-08 misreport` (reply nói sai số tiền so với ledger).
 - **Scorecard & Anti-gaming (`M7`):**
   - `lab9.mutation`: `3/3` regression bị chặn (`seeded_regression`, `slice_regression`, `flaky_regression`), `0` báo nhầm (`fixed`, `honest_refactor` đều merge).
   - `lab9.traps`: `4/4` trap bị `integrity_check` / ratchet chặn với `exit 1` (`evaluator_errors_as_nan`, `dropped_failing_rows`, `cherry_picked_seeds`, `loosened_spec`), cùng các trap ẩn như dòng trùng lặp, `evaluator_failures` trên run xanh, và sửa nhãn slice.

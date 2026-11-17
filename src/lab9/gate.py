@@ -29,9 +29,14 @@ def integrity_check(pr: dict, base: dict, spec: dict, base_spec: dict | None = N
     (empty = trustworthy). A gate that passes a broken report is worse than no gate."""
     problems: list[str] = []
     pr_metrics = pr.get("metrics") or {}
+    base_metrics = base.get("metrics") or {}
     for k, v in pr_metrics.items():
         if _is_non_finite(v):
             problems.append(f"non-finite metric {k}={v}")
+    for m in spec.get("metrics") or []:
+        mid = m["id"]
+        if mid in base_metrics and base_metrics[mid] is not None and pr_metrics.get(mid) is None:
+            problems.append(f"missing/null metric {mid}")
 
     if pr.get("evaluator_failures"):
         problems.append(f"evaluator_failures non-empty ({len(pr['evaluator_failures'])})")
